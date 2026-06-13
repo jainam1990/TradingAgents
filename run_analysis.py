@@ -19,7 +19,7 @@ config["data_vendors"] = {
 
 ta = TradingAgentsGraph(debug=True, config=config)
 
-_, decision = ta.propagate("MU", "2026-06-06")
+_, decision = ta.propagate("SPCX", "2026-06-13")
 print("\n" + "="*60)
 print("FINAL DECISION")
 print("="*60)
