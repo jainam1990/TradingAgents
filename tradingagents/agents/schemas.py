@@ -79,12 +79,24 @@ class ResearchPlan(BaseModel):
     instructions the trader can execute against.
     """
 
+    bull_conviction: float = Field(
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Your probability estimate (0.0–1.0) that the bull thesis is correct, "
+            "based on the weight of evidence and argument quality in the debate. "
+            "0.5 = genuinely balanced. Values below 0.4 imply a bear lean; above "
+            "0.6 imply a bull lean. Be honest — this drives a consistency check "
+            "against your recommendation."
+        ),
+    )
     recommendation: PortfolioRating = Field(
         description=(
             "The investment recommendation. Exactly one of Buy / Overweight / "
-            "Hold / Underweight / Sell. Reserve Hold for situations where the "
-            "evidence on both sides is genuinely balanced; otherwise commit to "
-            "the side with the stronger arguments."
+            "Hold / Underweight / Sell. Must be consistent with bull_conviction: "
+            "below 0.35 → Underweight or Sell; 0.35–0.45 → Underweight or Hold; "
+            "0.45–0.55 → Hold; 0.55–0.65 → Overweight or Hold; above 0.65 → "
+            "Overweight or Buy. Reserve Hold for genuinely balanced evidence."
         ),
     )
     rationale: str = Field(
@@ -217,12 +229,28 @@ class PortfolioDecision(BaseModel):
         default=None,
         description="Optional target price in the instrument's quote currency.",
     )
+    fair_value_estimate: float | None = Field(
+        default=None,
+        description=(
+            "Optional intrinsic/DCF fair-value estimate in the instrument's quote "
+            "currency, drawn from the fundamentals analyst's report. If the analyst "
+            "provided one, reproduce it here; otherwise leave null."
+        ),
+    )
+    valuation_context: str | None = Field(
+        default=None,
+        description=(
+            "One sentence summarising whether the current price is above, below, or "
+            "at fair value, e.g. 'Trading at a 15 % premium to our $391 DCF estimate — "
+            "margin of safety is thin.' Required whenever fair_value_estimate is set."
+        ),
+    )
     time_horizon: str | None = Field(
         default=None,
         description="Optional recommended holding period, e.g. '3-6 months'.",
     )
 
-    @field_validator("price_target", mode="before")
+    @field_validator("price_target", "fair_value_estimate", mode="before")
     @classmethod
     def _nullish_float_to_none(cls, v):
         return _coerce_optional_float(v)
@@ -245,6 +273,10 @@ def render_pm_decision(decision: PortfolioDecision) -> str:
     ]
     if decision.price_target is not None:
         parts.extend(["", f"**Price Target**: {decision.price_target}"])
+    if decision.fair_value_estimate is not None:
+        parts.extend(["", f"**Fair Value Estimate**: {decision.fair_value_estimate}"])
+    if decision.valuation_context:
+        parts.extend(["", f"**Valuation**: {decision.valuation_context}"])
     if decision.time_horizon:
         parts.extend(["", f"**Time Horizon**: {decision.time_horizon}"])
     return "\n".join(parts)
