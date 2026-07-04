@@ -9,6 +9,7 @@ from langchain_core.messages import HumanMessage, RemoveMessage
 # Import tools from separate utility files
 from tradingagents.agents.utils.core_stock_tools import get_stock_data
 from tradingagents.agents.utils.fundamental_data_tools import (
+    calculate_dcf_fair_value,
     get_balance_sheet,
     get_cashflow,
     get_fundamentals,
@@ -29,6 +30,7 @@ from tradingagents.agents.utils.technical_indicators_tools import get_indicators
 __all__ = [
     "get_stock_data",
     "get_indicators",
+    "calculate_dcf_fair_value",
     "get_fundamentals",
     "get_balance_sheet",
     "get_cashflow",
